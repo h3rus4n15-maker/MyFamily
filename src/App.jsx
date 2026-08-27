@@ -7,7 +7,8 @@ import ListView from './views/ListView'
 import StatsView from './views/StatsView'
 import MemberFormModal from './components/MemberFormModal.jsx'
 import MemberDetailModal from './components/MemberDetailModal.jsx'
-import { FamilyDB } from './storage/db'
+import { db } from './firebase'
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore'
 import './App.css'
 
 function App() {
@@ -18,22 +19,25 @@ function App() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
 
-  // Load members on mount
-  useEffect(() => {
-    const data = FamilyDB.getMembers()
-    setMembers(data)
-  }, [])
-
-  const reloadMembers = () => {
-    const updated = FamilyDB.getMembers()
-    setMembers([...updated])
+  const fetchMembers = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'members'))
+      const dataList = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      setMembers(dataList)
+    } catch (error) {
+      console.error('Gagal mengambil data:', error)
+    }
   }
 
+  useEffect(() => {
+    fetchMembers()
+  }, [])
+
   const handleReset = () => {
-    if (confirm('Reset data ke silsilah contoh awal (3 Generasi)? Data yang Anda ubah akan digantikan data awal.')) {
-      const defaultData = FamilyDB.resetToDefault()
-      setMembers([...defaultData])
-    }
+    alert('Fitur reset tidak tersedia untuk data Firebase.')
   }
 
   const handleOpenAdd = () => {
@@ -51,18 +55,28 @@ function App() {
     setIsDetailOpen(true)
   }
 
-  const handleSaveMember = (id, memberData) => {
-    if (id) {
-      FamilyDB.updateMember(id, memberData)
-    } else {
-      FamilyDB.addMember(memberData)
+  const handleSaveMember = async (id, memberData) => {
+    try {
+      if (id) {
+        await updateDoc(doc(db, 'members', id), memberData)
+      } else {
+        await addDoc(collection(db, 'members'), memberData)
+      }
+      await fetchMembers()
+    } catch (error) {
+      console.error('Gagal menyimpan data:', error)
+      alert('Terjadi kesalahan saat menyimpan data.')
     }
-    reloadMembers()
   }
 
-  const handleDeleteMember = (id) => {
-    FamilyDB.deleteMember(id)
-    reloadMembers()
+  const handleDeleteMember = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'members', id))
+      await fetchMembers()
+    } catch (error) {
+      console.error('Gagal menghapus data:', error)
+      alert('Terjadi kesalahan saat menghapus data.')
+    }
   }
 
   return (
