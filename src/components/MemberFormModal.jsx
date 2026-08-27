@@ -4,6 +4,7 @@ import { db } from '../firebase'
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore'
 
 export default function MemberFormModal({ isOpen, member, allMembers, onSave, onClose }) {
+  // State utama untuk data form anggota keluarga
   const [formData, setFormData] = useState({
     name: '',
     dob: '',
@@ -18,8 +19,10 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
     photoUrl: ''
   })
 
+  // Preview foto yang akan ditampilkan sebelum di-save
   const [photoPreview, setPhotoPreview] = useState('')
 
+  // Saat modal dibuka atau data member berubah, isi form sesuai data yang sedang diedit
   useEffect(() => {
     if (member) {
       setFormData({
@@ -56,6 +59,7 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
 
   if (!isOpen) return null
 
+  // Proses foto yang dipilih user, lalu kompres agar ukuran file tidak terlalu besar
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -95,6 +99,7 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
     reader.readAsDataURL(file)
   }
 
+  // Simpan data ke Firestore, baik saat tambah baru maupun edit data lama
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -129,11 +134,13 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
     }
   }
 
+  // Hitung umur otomatis berdasarkan tanggal lahir dan tanggal meninggal bila ada
   const ageInfo = calculateAge(
     formData.dob,
     formData.status === 'deceased' ? formData.deathDate : null
   )
 
+  // Filter data anggota yang bisa dipilih sebagai ayah, ibu, atau pasangan
   const potentialFathers = allMembers.filter(
     (m) => m.gender === 'male' && (!member || m.id !== member.id)
   )
