@@ -1,5 +1,5 @@
 import { calculateAge } from '../utils/ageCalculator.js';
-import confetti from 'canvas-confetti';
+// canvas-confetti optional import removed
 
 export class MemberFormModal {
   constructor(onSave) {
@@ -306,8 +306,8 @@ export class MemberFormModal {
     }
 
     // Celebrate adding a member!
-    if (!this.currentMemberId) {
-      confetti({
+    if (!this.currentMemberId && typeof window.confetti === 'function') {
+      window.confetti({
         particleCount: 50,
         spread: 60,
         origin: { y: 0.8 }
