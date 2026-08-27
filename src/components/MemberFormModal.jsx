@@ -1,3 +1,5 @@
+import { db } from '../firebase'; // Sesuaikan posisi firebase.js jika di folder src/
+import { collection, addDoc } from 'firebase/firestore';
 import React, { useState, useEffect } from 'react'
 import { calculateAge } from '../utils/ageCalculator.js'
 
@@ -93,12 +95,27 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
     reader.readAsDataURL(file)
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!formData.name || !formData.dob) {
-      alert('Nama dan Tanggal Lahir wajib diisi.')
-      return
-    }
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    // Menyimpan data modal ke koleksi 'members' di Firestore
+    const docRef = await addDoc(collection(db, "members"), {
+      nama: formData.nama,
+      peran: formData.peran,
+      generasi: formData.generasi,
+      hubungan: formData.hubungan,
+      foto: formData.foto || "",
+      createdAt: new Date()
+    });
+
+    alert("Anggota keluarga berhasil ditambahkan!");
+    onClose(); // Menutup modal setelah berhasil simpan
+  } catch (error) {
+    console.error("Gagal menyimpan ke Firebase:", error);
+    alert("Terjadi kesalahan saat menyimpan data.");
+  }
+};
 
     const payload = {
       ...formData,
