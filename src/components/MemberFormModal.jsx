@@ -99,28 +99,33 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
     e.preventDefault();
 
     const payload = {
-      ...formData,
+      name: formData.name,
+      dob: formData.dob,
+      gender: formData.gender,
+      status: formData.status,
+      deathDate: formData.status === 'deceased' ? formData.deathDate || null : null,
+      role: formData.role || '',
       fatherId: formData.fatherId || null,
       motherId: formData.motherId || null,
       spouseId: formData.spouseId || null,
-      deathDate: formData.status === 'deceased' ? formData.deathDate || null : null
+      notes: formData.notes || '',
+      photoUrl: formData.photoUrl || '',
+      createdAt: new Date()
     }
-
-    console.log('[MemberFormModal] handleSubmit terpanggil', { memberId: member ? member.id : null, payload })
 
     try {
       if (member?.id) {
         await updateDoc(doc(db, 'members', member.id), payload)
-        console.log('[MemberFormModal] updateDoc berhasil')
+        alert('Berhasil! Data anggota diperbarui di Firestore.')
       } else {
-        await addDoc(collection(db, 'members'), payload)
-        console.log('[MemberFormModal] addDoc berhasil')
+        const docRef = await addDoc(collection(db, 'members'), payload)
+        alert('Berhasil! Data tersimpan di Firestore dengan ID: ' + docRef.id)
       }
       onSave(member ? member.id : null, payload)
       onClose()
     } catch (error) {
-      console.error('[MemberFormModal] Gagal ke Firebase:', error)
-      alert('Terjadi kesalahan saat menyimpan data.')
+      console.error('Gagal simpan ke Firebase:', error)
+      alert('Error: ' + error.message)
     }
   }
 
