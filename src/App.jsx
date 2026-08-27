@@ -36,10 +36,6 @@ function App() {
     fetchMembers()
   }, [])
 
-  const handleReset = () => {
-    alert('Fitur reset tidak tersedia untuk data Firebase.')
-  }
-
   const handleOpenAdd = () => {
     setEditingMember(null)
     setIsFormOpen(true)
@@ -72,7 +68,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header onReset={handleReset} />
+      <Header />
       <main className="content-area">
         {activeTab === 'tree' && (
           <TreeView members={members} onSelectMember={handleSelectMember} />
