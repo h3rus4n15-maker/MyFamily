@@ -55,22 +55,9 @@ function App() {
     setIsDetailOpen(true)
   }
 
-  const handleSaveMember = async (id, memberData) => {
-    console.log('[App] handleSaveMember terpanggil', { id, memberData })
-    try {
-      if (id) {
-        console.log('[App] updateDoc ->', id)
-        await updateDoc(doc(db, 'members', id), memberData)
-      } else {
-        console.log('[App] addDoc ->', memberData)
-        await addDoc(collection(db, 'members'), memberData)
-      }
-      console.log('[App] fetchMembers setelah simpan')
-      await fetchMembers()
-    } catch (error) {
-      console.error('[App] Gagal menyimpan data:', error)
-      alert('Terjadi kesalahan saat menyimpan data.')
-    }
+  const handleSaveMember = async () => {
+    console.log('[App] refresh members setelah simpan')
+    await fetchMembers()
   }
 
   const handleDeleteMember = async (id) => {

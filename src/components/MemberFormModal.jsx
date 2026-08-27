@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { calculateAge } from '../utils/ageCalculator.js'
+import { db } from '../firebase'
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore'
 
 export default function MemberFormModal({ isOpen, member, allMembers, onSave, onClose }) {
   const [formData, setFormData] = useState({
@@ -93,7 +95,7 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
     reader.readAsDataURL(file)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const payload = {
@@ -105,8 +107,21 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
     }
 
     console.log('[MemberFormModal] handleSubmit terpanggil', { memberId: member ? member.id : null, payload })
-    onSave(member ? member.id : null, payload)
-    onClose()
+
+    try {
+      if (member?.id) {
+        await updateDoc(doc(db, 'members', member.id), payload)
+        console.log('[MemberFormModal] updateDoc berhasil')
+      } else {
+        await addDoc(collection(db, 'members'), payload)
+        console.log('[MemberFormModal] addDoc berhasil')
+      }
+      onSave(member ? member.id : null, payload)
+      onClose()
+    } catch (error) {
+      console.error('[MemberFormModal] Gagal ke Firebase:', error)
+      alert('Terjadi kesalahan saat menyimpan data.')
+    }
   }
 
   const ageInfo = calculateAge(
@@ -141,7 +156,7 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
           <div className="modal-body">
             {/* Photo Upload */}
             <div className="form-group">
-              <label className="form-label">Foto / Gambar Anggota</label>
+              <label className="form-label" htmlFor="form-photo-input">Foto / Gambar Anggota</label>
               <div className="image-picker-container">
                 <img
                   src={
@@ -152,14 +167,14 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
                   className="image-preview"
                 />
                 <div>
-                  <label className="btn-upload">
+                  <label className="btn-upload" htmlFor="form-photo-picker">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                       <polyline points="17 8 12 3 7 8"></polyline>
                       <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
                     Pilih Foto
-                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
+                    <input id="form-photo-picker" type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
                   </label>
                   <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                     Format JPG, PNG (Max 2MB)
@@ -170,8 +185,10 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
 
             {/* Nama Lengkap */}
             <div className="form-group">
-              <label className="form-label">Nama Lengkap *</label>
+              <label className="form-label" htmlFor="form-name">Nama Lengkap *</label>
               <input
+                id="form-name"
+                name="name"
                 type="text"
                 className="form-control"
                 placeholder="Contoh: Budi Santoso"
@@ -184,8 +201,10 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
             {/* Tanggal Lahir & Gender */}
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Tanggal Lahir *</label>
+                <label className="form-label" htmlFor="form-dob">Tanggal Lahir *</label>
                 <input
+                  id="form-dob"
+                  name="dob"
                   type="date"
                   className="form-control"
                   value={formData.dob}
@@ -194,8 +213,10 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Jenis Kelamin</label>
+                <label className="form-label" htmlFor="form-gender">Jenis Kelamin</label>
                 <select
+                  id="form-gender"
+                  name="gender"
                   className="form-control"
                   value={formData.gender}
                   onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
@@ -217,8 +238,10 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
             {/* Status Keberadaan & Tanggal Meninggal */}
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Status Keberadaan</label>
+                <label className="form-label" htmlFor="form-status">Status Keberadaan</label>
                 <select
+                  id="form-status"
+                  name="status"
                   className="form-control"
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
@@ -229,8 +252,10 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
               </div>
               {formData.status === 'deceased' && (
                 <div className="form-group">
-                  <label className="form-label">Tanggal Meninggal</label>
+                  <label className="form-label" htmlFor="form-death-date">Tanggal Meninggal</label>
                   <input
+                    id="form-death-date"
+                    name="deathDate"
                     type="date"
                     className="form-control"
                     value={formData.deathDate}
@@ -242,8 +267,10 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
 
             {/* Peran Dalam Keluarga */}
             <div className="form-group">
-              <label className="form-label">Peran Dalam Keluarga</label>
+              <label className="form-label" htmlFor="form-role">Peran Dalam Keluarga</label>
               <input
+                id="form-role"
+                name="role"
                 type="text"
                 className="form-control"
                 placeholder="Contoh: Kakek, Ayah, Ibu, Anak, Cucu"
@@ -255,8 +282,10 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
             {/* Relations */}
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Ayah (Orang Tua Pria)</label>
+                <label className="form-label" htmlFor="form-father-id">Ayah (Orang Tua Pria)</label>
                 <select
+                  id="form-father-id"
+                  name="fatherId"
                   className="form-control"
                   value={formData.fatherId}
                   onChange={(e) => setFormData({ ...formData, fatherId: e.target.value })}
@@ -270,8 +299,10 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Ibu (Orang Tua Wanita)</label>
+                <label className="form-label" htmlFor="form-mother-id">Ibu (Orang Tua Wanita)</label>
                 <select
+                  id="form-mother-id"
+                  name="motherId"
                   className="form-control"
                   value={formData.motherId}
                   onChange={(e) => setFormData({ ...formData, motherId: e.target.value })}
@@ -287,8 +318,10 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
             </div>
 
             <div className="form-group">
-              <label className="form-label">Pasangan (Suami / Istri)</label>
+              <label className="form-label" htmlFor="form-spouse-id">Pasangan (Suami / Istri)</label>
               <select
+                id="form-spouse-id"
+                name="spouseId"
                 className="form-control"
                 value={formData.spouseId}
                 onChange={(e) => setFormData({ ...formData, spouseId: e.target.value })}
@@ -304,8 +337,10 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
 
             {/* Catatan */}
             <div className="form-group">
-              <label className="form-label">Catatan Tambahan</label>
+              <label className="form-label" htmlFor="form-notes">Catatan Tambahan</label>
               <textarea
+                id="form-notes"
+                name="notes"
                 className="form-control"
                 rows={2}
                 placeholder="Catatan khusus, pekerjaan, hobi..."
