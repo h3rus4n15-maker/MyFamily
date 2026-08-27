@@ -104,6 +104,7 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
       deathDate: formData.status === 'deceased' ? formData.deathDate || null : null
     }
 
+    console.log('[MemberFormModal] handleSubmit terpanggil', { memberId: member ? member.id : null, payload })
     onSave(member ? member.id : null, payload)
     onClose()
   }
