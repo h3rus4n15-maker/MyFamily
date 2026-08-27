@@ -71,7 +71,7 @@ function App() {
   }
 
   return (
-    <div className="app" id="app">
+    <div className="app">
       <Header onReset={handleReset} />
       <main className="content-area">
         {activeTab === 'tree' && (
