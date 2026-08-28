@@ -183,6 +183,8 @@ export default function TreeView({ members, onSelectMember }) {
       svg.setAttribute('height', wrapperRect.height.toString())
       svg.innerHTML = ''
 
+      const drawnSpouses = new Set()
+
       members.forEach((m) => {
         if (!m.fatherId && !m.motherId) return
 
@@ -214,6 +216,34 @@ export default function TreeView({ members, onSelectMember }) {
           path.setAttribute('stroke-dasharray', '4 2')
           svg.appendChild(path)
         }
+      })
+
+      members.forEach((m) => {
+        if (!m.spouseId) return
+        const pairKey = [m.id, m.spouseId].sort().join('-')
+        if (drawnSpouses.has(pairKey)) return
+        drawnSpouses.add(pairKey)
+
+        const spouseEl = content.querySelector(`[data-id="${m.spouseId}"]`)
+        const memberEl = content.querySelector(`[data-id="${m.id}"]`)
+        if (!spouseEl || !memberEl) return
+
+        const memberRect = memberEl.getBoundingClientRect()
+        const spouseRect = spouseEl.getBoundingClientRect()
+
+        const leftX = Math.min(memberRect.left, spouseRect.left) - wrapperRect.left
+        const rightX = Math.max(memberRect.right, spouseRect.right) - wrapperRect.left
+        const midY = memberRect.top + memberRect.height / 2 - wrapperRect.top
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        const d = `M ${leftX} ${midY} L ${rightX} ${midY}`
+        path.setAttribute('d', d)
+        path.setAttribute('stroke', '#ec4899')
+        path.setAttribute('stroke-width', '2.5')
+        path.setAttribute('fill', 'none')
+        path.setAttribute('opacity', '0.85')
+        path.setAttribute('stroke-dasharray', 'none')
+        svg.appendChild(path)
       })
     }
 
