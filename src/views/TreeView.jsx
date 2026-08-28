@@ -202,12 +202,15 @@ export default function TreeView({ members, onSelectMember }) {
         if (m.spouseId) allMemberIds.add(m.spouseId)
       })
 
+      const generationColors = ['#6366f1', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444']
+
       members.forEach((m) => {
         if (!m.fatherId && !m.motherId) return
 
         const childEl = content.querySelector(`[data-id="${m.id}"]`)
         if (!childEl) return
 
+        const childGen = parseInt(childEl.getAttribute('data-gen') || '0', 10)
         const childRect = childEl.getBoundingClientRect()
         const childX = childRect.left + childRect.width / 2 - wrapperRect.left
         const childY = childRect.top - wrapperRect.top
@@ -222,14 +225,15 @@ export default function TreeView({ members, onSelectMember }) {
           const parentY = parentRect.bottom - wrapperRect.top
 
           const midY = parentY + (childY - parentY) / 2
+          const offsetX = (childGen % 3) * 8 - 8
 
           const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-          const d = `M ${parentX} ${parentY} V ${midY} H ${childX} V ${childY}`
+          const d = `M ${parentX + offsetX} ${parentY} V ${midY} H ${childX + offsetX} V ${childY}`
           path.setAttribute('d', d)
-          path.setAttribute('stroke', '#6366f1')
+          path.setAttribute('stroke', generationColors[childGen % generationColors.length])
           path.setAttribute('stroke-width', '2')
           path.setAttribute('fill', 'none')
-          path.setAttribute('opacity', '0.6')
+          path.setAttribute('opacity', '0.75')
           path.setAttribute('stroke-dasharray', '4 2')
           svg.appendChild(path)
         }
@@ -342,6 +346,7 @@ export default function TreeView({ members, onSelectMember }) {
                     <div
                       className="member-node"
                       data-id={member.id}
+                      data-gen={genIdx}
                       onClick={() => onSelectMember(member)}
                     >
                       <div className="avatar-wrapper">
@@ -363,6 +368,7 @@ export default function TreeView({ members, onSelectMember }) {
                         <div
                           className="member-node"
                           data-id={spouse.id}
+                          data-gen={genIdx}
                           onClick={() => onSelectMember(spouse)}
                         >
                           <div className="avatar-wrapper">
