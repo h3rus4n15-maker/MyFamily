@@ -204,6 +204,39 @@ export default function TreeView({ members, onSelectMember }) {
 
       const generationColors = ['#6366f1', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444']
 
+      const childrenByParent = new Map()
+
+      members.forEach((m) => {
+        const parentId = m.fatherId || m.motherId
+        if (!parentId) return
+
+        if (!childrenByParent.has(parentId)) {
+          childrenByParent.set(parentId, [])
+        }
+        childrenByParent.get(parentId).push(m)
+      })
+
+      const childOffsets = new Map()
+
+      childrenByParent.forEach((children, parentId) => {
+        const childElements = children
+          .map((child) => content.querySelector(`[data-id="${child.id}"]`))
+          .filter(Boolean)
+
+        if (childElements.length === 0) return
+
+        childElements.sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left)
+
+        const total = childElements.length
+        const spacing = 24
+        const startX = -((total - 1) * spacing) / 2
+
+        childElements.forEach((el, index) => {
+          const memberId = el.getAttribute('data-id')
+          childOffsets.set(memberId, startX + index * spacing)
+        })
+      })
+
       members.forEach((m) => {
         if (!m.fatherId && !m.motherId) return
 
@@ -225,7 +258,7 @@ export default function TreeView({ members, onSelectMember }) {
           const parentY = parentRect.bottom - wrapperRect.top
 
           const midY = parentY + (childY - parentY) / 2
-          const offsetX = (childGen % 3) * 8 - 8
+          const offsetX = childOffsets.get(m.id) || 0
 
           const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
           const d = `M ${parentX + offsetX} ${parentY} V ${midY} H ${childX + offsetX} V ${childY}`
