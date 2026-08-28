@@ -8,7 +8,7 @@ import StatsView from './views/StatsView'
 import MemberFormModal from './components/MemberFormModal.jsx'
 import MemberDetailModal from './components/MemberDetailModal.jsx'
 import { db } from './firebase'
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore'
 import './App.css'
 
 function App() {
@@ -18,6 +18,7 @@ function App() {
   const [editingMember, setEditingMember] = useState(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const fetchMembers = async () => {
     try {
@@ -32,8 +33,24 @@ function App() {
     }
   }
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await fetchMembers()
+    setTimeout(() => setIsRefreshing(false), 600)
+  }
+
   useEffect(() => {
-    fetchMembers()
+    const unsubscribe = onSnapshot(collection(db, 'members'), (querySnapshot) => {
+      const dataList = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      setMembers(dataList)
+    }, (error) => {
+      console.error('Gagal memantau data:', error)
+    })
+
+    return () => unsubscribe()
   }, [])
 
   const handleOpenAdd = () => {
@@ -68,7 +85,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header />
+      <Header onRefresh={handleRefresh} isRefreshing={isRefreshing} />
       <main className="content-area">
         {activeTab === 'tree' && (
           <TreeView members={members} onSelectMember={handleSelectMember} />

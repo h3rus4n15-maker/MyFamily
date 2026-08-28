@@ -1,17 +1,15 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { calculateAge } from '../utils/ageCalculator.js'
 
 function calculateGenerations(members) {
   const genMap = new Map()
 
-  // Find roots (members with no parents in database)
   members.forEach((m) => {
     if (!m.fatherId && !m.motherId) {
       genMap.set(m.id, 0)
     }
   })
 
-  // Iteratively resolve generations for children
   let changed = true
   let passes = 0
   while (changed && passes < 10) {
@@ -37,14 +35,12 @@ function calculateGenerations(members) {
     })
   }
 
-  // Assign default 0 for unassigned
   members.forEach((m) => {
     if (!genMap.has(m.id)) {
       genMap.set(m.id, 0)
     }
   })
 
-  // Sync spouses to same generation
   for (let i = 0; i < 3; i++) {
     members.forEach((m) => {
       if (m.spouseId && genMap.has(m.spouseId)) {
@@ -57,7 +53,6 @@ function calculateGenerations(members) {
     })
   }
 
-  // Group into arrays
   const maxGen = Math.max(...Array.from(genMap.values()), 0)
   const result = Array.from({ length: maxGen + 1 }, () => [])
 
@@ -72,14 +67,118 @@ function calculateGenerations(members) {
 export default function TreeView({ members, onSelectMember }) {
   const containerRef = useRef(null)
   const svgRef = useRef(null)
+  const contentRef = useRef(null)
+
+  const [scale, setScale] = useState(1)
+  const [translate, setTranslate] = useState({ x: 0, y: 0 })
+  const [collapsedLevels, setCollapsedLevels] = useState(new Set())
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [initialTranslate, setInitialTranslate] = useState({ x: 0, y: 0 })
+  const [initialPinchDistance, setInitialPinchDistance] = useState(null)
+  const [initialPinchScale, setInitialPinchScale] = useState(1)
+
+  const minScale = 0.4
+  const maxScale = 3
+
+  const toggleLevel = (levelIndex) => {
+    setCollapsedLevels((prev) => {
+      const next = new Set(prev)
+      if (next.has(levelIndex)) {
+        next.delete(levelIndex)
+      } else {
+        next.add(levelIndex)
+      }
+      return next
+    })
+  }
+
+  const isLevelVisible = (levelIndex) => {
+    for (let i = 0; i < levelIndex; i++) {
+      if (collapsedLevels.has(i)) return false
+    }
+    return true
+  }
+
+  const zoomIn = () => {
+    setScale((s) => Math.min(s + 0.25, maxScale))
+  }
+
+  const zoomOut = () => {
+    setScale((s) => Math.max(s - 0.25, minScale))
+  }
+
+  const resetZoom = () => {
+    setScale(1)
+    setTranslate({ x: 0, y: 0 })
+  }
+
+  const handleWheel = useCallback((e) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? -0.08 : 0.08
+    setScale((s) => Math.max(minScale, Math.min(maxScale, s + delta)))
+  }, [])
+
+  const handleMouseDown = (e) => {
+    if (e.target.closest('.member-node') || e.target.closest('.btn-icon') || e.target.closest('.level-title')) return
+    setIsDragging(true)
+    setDragStart({ x: e.clientX, y: e.clientY })
+    setInitialTranslate({ ...translate })
+  }
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return
+    const dx = e.clientX - dragStart.x
+    const dy = e.clientY - dragStart.y
+    setTranslate({ x: initialTranslate.x + dx, y: initialTranslate.y + dy })
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  const getTouchDistance = (touches) => {
+    const dx = touches[0].clientX - touches[1].clientX
+    const dy = touches[0].clientY - touches[1].clientY
+    return Math.sqrt(dx * dx + dy * dy)
+  }
+
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 2) {
+      setInitialPinchDistance(getTouchDistance(e.touches))
+      setInitialPinchScale(scale)
+    } else if (e.touches.length === 1 && !e.target.closest('.member-node') && !e.target.closest('.level-title')) {
+      setIsDragging(true)
+      setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY })
+      setInitialTranslate({ ...translate })
+    }
+  }
+
+  const handleTouchMove = (e) => {
+    if (e.touches.length === 2 && initialPinchDistance) {
+      const currentDistance = getTouchDistance(e.touches)
+      const newScale = initialPinchScale * (currentDistance / initialPinchDistance)
+      setScale(Math.max(minScale, Math.min(maxScale, newScale)))
+    } else if (e.touches.length === 1 && isDragging) {
+      const dx = e.touches[0].clientX - dragStart.x
+      const dy = e.touches[0].clientY - dragStart.y
+      setTranslate({ x: initialTranslate.x + dx, y: initialTranslate.y + dy })
+    }
+  }
+
+  const handleTouchEnd = () => {
+    setIsDragging(false)
+    setInitialPinchDistance(null)
+  }
 
   useEffect(() => {
-    const wrapper = containerRef.current
+    const container = containerRef.current
     const svg = svgRef.current
-    if (!wrapper || !svg || !members || members.length === 0) return
+    const content = contentRef.current
+    if (!container || !svg || !content || !members || members.length === 0) return
 
     const drawLines = () => {
-      const wrapperRect = wrapper.getBoundingClientRect()
+      const wrapperRect = container.getBoundingClientRect()
       svg.setAttribute('width', wrapperRect.width.toString())
       svg.setAttribute('height', wrapperRect.height.toString())
       svg.innerHTML = ''
@@ -87,7 +186,7 @@ export default function TreeView({ members, onSelectMember }) {
       members.forEach((m) => {
         if (!m.fatherId && !m.motherId) return
 
-        const childEl = wrapper.querySelector(`[data-id="${m.id}"]`)
+        const childEl = content.querySelector(`[data-id="${m.id}"]`)
         if (!childEl) return
 
         const childRect = childEl.getBoundingClientRect()
@@ -95,8 +194,8 @@ export default function TreeView({ members, onSelectMember }) {
         const childY = childRect.top - wrapperRect.top
 
         let parentEl = null
-        if (m.fatherId) parentEl = wrapper.querySelector(`[data-id="${m.fatherId}"]`)
-        if (!parentEl && m.motherId) parentEl = wrapper.querySelector(`[data-id="${m.motherId}"]`)
+        if (m.fatherId) parentEl = content.querySelector(`[data-id="${m.fatherId}"]`)
+        if (!parentEl && m.motherId) parentEl = content.querySelector(`[data-id="${m.motherId}"]`)
 
         if (parentEl) {
           const parentRect = parentEl.getBoundingClientRect()
@@ -124,7 +223,7 @@ export default function TreeView({ members, onSelectMember }) {
       clearTimeout(timer)
       window.removeEventListener('resize', drawLines)
     }
-  }, [members])
+  }, [members, collapsedLevels, scale, translate])
 
   if (!members || members.length === 0) {
     return (
@@ -143,7 +242,18 @@ export default function TreeView({ members, onSelectMember }) {
   const generations = calculateGenerations(members)
 
   return (
-    <div className="tree-container" ref={containerRef}>
+    <div
+      ref={containerRef}
+      className={`tree-container ${isDragging ? 'panning' : ''}`}
+      onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <svg
         ref={svgRef}
         id="tree-svg-lines"
@@ -158,36 +268,74 @@ export default function TreeView({ members, onSelectMember }) {
         }}
       />
 
-      {generations.map((levelMembers, genIdx) => (
-        <div className="tree-level" key={genIdx} data-gen={genIdx + 1}>
-          <span className="level-title">Generasi {genIdx + 1}</span>
-          {levelMembers.map((member) => {
-            const ageInfo = calculateAge(member.dob, member.deathDate)
-            const isAlive = member.status === 'alive'
-            return (
-              <div
-                key={member.id}
-                className="member-node"
-                data-id={member.id}
-                onClick={() => onSelectMember(member)}
+      <div
+        ref={contentRef}
+        className="tree-content"
+        style={{
+          transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
+          transformOrigin: '0 0'
+        }}
+      >
+        {generations.map((levelMembers, genIdx) => {
+          if (!isLevelVisible(genIdx)) return null
+
+          return (
+            <div className="tree-level" key={genIdx} data-gen={genIdx + 1}>
+              <span
+                className="level-title"
+                onClick={() => toggleLevel(genIdx)}
               >
-                <div className="avatar-wrapper">
-                  <img src={member.photoUrl} alt={member.name} className="avatar-img" />
-                  <span
-                    className={`status-dot ${isAlive ? 'alive' : 'deceased'}`}
-                    title={isAlive ? 'Hidup' : 'Meninggal'}
-                  />
-                </div>
-                <div className="member-name">{member.name}</div>
-                <div className="member-age-badge">{ageInfo.shortString}</div>
-                <div className="member-role">
-                  {member.role || (member.gender === 'male' ? 'Pria' : 'Wanita')}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      ))}
+                Generasi {genIdx + 1} {collapsedLevels.has(genIdx) ? '▼' : '▶'}
+              </span>
+              {levelMembers.map((member) => {
+                const ageInfo = calculateAge(member.dob, member.deathDate)
+                const isAlive = member.status === 'alive'
+                return (
+                  <div
+                    key={member.id}
+                    className="member-node"
+                    data-id={member.id}
+                    onClick={() => onSelectMember(member)}
+                  >
+                    <div className="avatar-wrapper">
+                      <img src={member.photoUrl} alt={member.name} className="avatar-img" />
+                      <span
+                        className={`status-dot ${isAlive ? 'alive' : 'deceased'}`}
+                        title={isAlive ? 'Hidup' : 'Meninggal'}
+                      />
+                    </div>
+                    <div className="member-name">{member.name}</div>
+                    <div className="member-age-badge">{ageInfo.shortString}</div>
+                    <div className="member-role">
+                      {member.role || (member.gender === 'male' ? 'Pria' : 'Wanita')}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="tree-controls">
+        <button type="button" className="tree-btn" onClick={zoomIn} title="Perbesar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <button type="button" className="tree-btn" onClick={resetZoom} title="Reset Zoom">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+            <path d="M21 3v5h-5"></path>
+          </svg>
+        </button>
+        <button type="button" className="tree-btn" onClick={zoomOut} title="Perkecil">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+      </div>
     </div>
   )
 }
