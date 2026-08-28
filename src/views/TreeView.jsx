@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { calculateAge } from '../utils/ageCalculator.js'
 
 function calculateGenerations(members) {
+  const memberMap = new Map(members.map((m) => [m.id, m]))
   const genMap = new Map()
 
   members.forEach((m) => {
@@ -54,14 +55,26 @@ function calculateGenerations(members) {
   }
 
   const maxGen = Math.max(...Array.from(genMap.values()), 0)
-  const result = Array.from({ length: maxGen + 1 }, () => [])
+  const grouped = Array.from({ length: maxGen + 1 }, () => [])
+
+  const visited = new Set()
 
   members.forEach((m) => {
-    const g = genMap.get(m.id) || 0
-    result[g].push(m)
+    if (visited.has(m.id)) return
+    const spouse = m.spouseId ? memberMap.get(m.spouseId) : null
+    if (spouse) {
+      visited.add(m.id)
+      visited.add(spouse.id)
+      const g = genMap.get(m.id) || 0
+      grouped[g].push({ primary: m, spouse })
+    } else {
+      visited.add(m.id)
+      const g = genMap.get(m.id) || 0
+      grouped[g].push({ primary: m, spouse: null })
+    }
   })
 
-  return result
+  return grouped
 }
 
 export default function TreeView({ members, onSelectMember }) {
@@ -183,7 +196,11 @@ export default function TreeView({ members, onSelectMember }) {
       svg.setAttribute('height', wrapperRect.height.toString())
       svg.innerHTML = ''
 
-      const drawnSpouses = new Set()
+      const allMemberIds = new Set()
+      members.forEach((m) => {
+        allMemberIds.add(m.id)
+        if (m.spouseId) allMemberIds.add(m.spouseId)
+      })
 
       members.forEach((m) => {
         if (!m.fatherId && !m.motherId) return
@@ -218,22 +235,20 @@ export default function TreeView({ members, onSelectMember }) {
         }
       })
 
+      const drawnSpouses = new Set()
       members.forEach((m) => {
         if (!m.spouseId) return
         const pairKey = [m.id, m.spouseId].sort().join('-')
         if (drawnSpouses.has(pairKey)) return
         drawnSpouses.add(pairKey)
 
-        const spouseEl = content.querySelector(`[data-id="${m.spouseId}"]`)
-        const memberEl = content.querySelector(`[data-id="${m.id}"]`)
-        if (!spouseEl || !memberEl) return
+        const connectorEl = content.querySelector(`[data-spouse-connector="${m.id}"]`)
+        if (!connectorEl) return
 
-        const memberRect = memberEl.getBoundingClientRect()
-        const spouseRect = spouseEl.getBoundingClientRect()
-
-        const leftX = Math.min(memberRect.left, spouseRect.left) - wrapperRect.left
-        const rightX = Math.max(memberRect.right, spouseRect.right) - wrapperRect.left
-        const midY = memberRect.top + memberRect.height / 2 - wrapperRect.top
+        const connectorRect = connectorEl.getBoundingClientRect()
+        const leftX = connectorRect.left - wrapperRect.left
+        const rightX = connectorRect.right - wrapperRect.left
+        const midY = connectorRect.top + connectorRect.height / 2 - wrapperRect.top
 
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
         const d = `M ${leftX} ${midY} L ${rightX} ${midY}`
@@ -317,29 +332,57 @@ export default function TreeView({ members, onSelectMember }) {
               >
                 Generasi {genIdx + 1} {collapsedLevels.has(genIdx) ? '▼' : '▶'}
               </span>
-              {levelMembers.map((member) => {
+              {levelMembers.map((pair, pairIdx) => {
+                const member = pair.primary
+                const spouse = pair.spouse
                 const ageInfo = calculateAge(member.dob, member.deathDate)
                 const isAlive = member.status === 'alive'
                 return (
-                  <div
-                    key={member.id}
-                    className="member-node"
-                    data-id={member.id}
-                    onClick={() => onSelectMember(member)}
-                  >
-                    <div className="avatar-wrapper">
-                      <img src={member.photoUrl} alt={member.name} className="avatar-img" />
-                      <span
-                        className={`status-dot ${isAlive ? 'alive' : 'deceased'}`}
-                        title={isAlive ? 'Hidup' : 'Meninggal'}
-                      />
+                  <React.Fragment key={member.id}>
+                    <div
+                      className="member-node"
+                      data-id={member.id}
+                      onClick={() => onSelectMember(member)}
+                    >
+                      <div className="avatar-wrapper">
+                        <img src={member.photoUrl} alt={member.name} className="avatar-img" />
+                        <span
+                          className={`status-dot ${isAlive ? 'alive' : 'deceased'}`}
+                          title={isAlive ? 'Hidup' : 'Meninggal'}
+                        />
+                      </div>
+                      <div className="member-name">{member.name}</div>
+                      <div className="member-age-badge">{ageInfo.shortString}</div>
+                      <div className="member-role">
+                        {member.role || (member.gender === 'male' ? 'Pria' : 'Wanita')}
+                      </div>
                     </div>
-                    <div className="member-name">{member.name}</div>
-                    <div className="member-age-badge">{ageInfo.shortString}</div>
-                    <div className="member-role">
-                      {member.role || (member.gender === 'male' ? 'Pria' : 'Wanita')}
-                    </div>
-                  </div>
+                    {spouse && (
+                      <>
+                        <div className="spouse-connector" data-spouse-connector={member.id} />
+                        <div
+                          className="member-node"
+                          data-id={spouse.id}
+                          onClick={() => onSelectMember(spouse)}
+                        >
+                          <div className="avatar-wrapper">
+                            <img src={spouse.photoUrl} alt={spouse.name} className="avatar-img" />
+                            <span
+                              className={`status-dot ${spouse.status === 'alive' ? 'alive' : 'deceased'}`}
+                              title={spouse.status === 'alive' ? 'Hidup' : 'Meninggal'}
+                            />
+                          </div>
+                          <div className="member-name">{spouse.name}</div>
+                          <div className="member-age-badge">
+                            {calculateAge(spouse.dob, spouse.deathDate).shortString}
+                          </div>
+                          <div className="member-role">
+                            {spouse.role || (spouse.gender === 'male' ? 'Pria' : 'Wanita')}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </React.Fragment>
                 )
               })}
             </div>
