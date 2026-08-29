@@ -320,6 +320,47 @@ body {
   transform: scale(0.95);
 }
 
+@media (max-width: 380px) {
+  .tree-level {
+    gap: 10px;
+    padding: 24px 8px 0;
+  }
+
+  .member-node {
+    width: 130px;
+    min-width: 130px;
+    padding: 8px;
+  }
+
+  .spouse-connector {
+    width: 10px;
+  }
+
+  .avatar-wrapper {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 6px;
+  }
+
+  .avatar-img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .member-name {
+    font-size: 0.78rem;
+  }
+
+  .member-age-badge {
+    font-size: 0.68rem;
+    padding: 2px 6px;
+  }
+
+  .member-role {
+    font-size: 0.65rem;
+  }
+}
+
 /* Family Member Node Card */
 .member-node {
   background: var(--bg-card);
