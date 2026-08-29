@@ -12,7 +12,7 @@ export default function Header({ onRefresh, isRefreshing }) {
         </div>
         <div>
           <div className="brand-title">Trah Karyo Suwarno</div>
-          <div className="brand-subtitle">Silsilah Digital</div>
+          <div className="brand-subtitle">Barang siapa ingin dilapangkan rezekinya dan dipanjangkan umurnya, hendaklah ia menyambung silaturahmi.</div>
         </div>
       </div>
       <div className="header-actions">
