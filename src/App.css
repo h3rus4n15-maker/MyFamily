@@ -244,7 +244,7 @@
 }
 
 .focus-connector-spouse {
-  width: 16px;
+  width: 8px;
   height: 2px;
   background: #ec4899;
   align-self: center;
@@ -287,7 +287,7 @@
   }
 
   .focus-connector-spouse {
-    width: 10px;
+    width: 6px;
   }
 
   .focus-connector {
