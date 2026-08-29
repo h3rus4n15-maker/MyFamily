@@ -189,3 +189,83 @@
 .pin-gate-card button {
   width: 100%;
 }
+.tree-focused {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 1.5rem 1rem 2rem;
+  overflow-x: auto;
+}
+
+.tree-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  margin-bottom: 1.25rem;
+  cursor: pointer;
+}
+
+.focus-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.focus-row-center {
+  align-items: center;
+}
+
+.focus-row-children {
+  gap: 12px;
+}
+
+.focus-connector {
+  width: 2px;
+  height: 28px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #22d3ee 0,
+    #22d3ee 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+.focus-connector-spouse {
+  width: 28px;
+  height: 2px;
+  background: #ec4899;
+  align-self: center;
+}
+
+.focus-node-small {
+  transform: scale(0.85);
+  opacity: 0.9;
+}
+
+.focus-node-large {
+  transform: scale(1.05);
+}
+
+.focus-node-highlight {
+  border: 2px solid #6366f1 !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+
+.focus-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 1.5rem;
+  max-width: 260px;
+}
