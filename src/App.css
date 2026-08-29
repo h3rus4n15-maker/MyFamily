@@ -269,3 +269,11 @@
   margin-top: 1.5rem;
   max-width: 260px;
 }
+.tree-container.tree-focused {
+  position: static;
+  height: auto;
+  min-height: auto;
+  max-height: none;
+  overflow: visible;
+  touch-action: pan-y;
+}

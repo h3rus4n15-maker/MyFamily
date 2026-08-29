@@ -122,3 +122,7 @@ function App() {
 }
 
 export default App
+.content-area {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
