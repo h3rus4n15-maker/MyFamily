@@ -217,16 +217,18 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 12px;
+  flex-wrap: nowrap;
 }
 
 .focus-row-center {
   align-items: center;
+  flex-wrap: nowrap;
 }
 
 .focus-row-children {
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .focus-connector {
@@ -242,10 +244,11 @@
 }
 
 .focus-connector-spouse {
-  width: 28px;
+  width: 16px;
   height: 2px;
   background: #ec4899;
   align-self: center;
+  flex-shrink: 0;
 }
 
 .focus-node-small {
@@ -269,6 +272,33 @@
   margin-top: 1.5rem;
   max-width: 260px;
 }
+
+@media (max-width: 380px) {
+  .focus-row {
+    gap: 8px;
+  }
+
+  .focus-row-center .member-node {
+    transform: scale(0.9);
+  }
+
+  .focus-row-center .focus-node-highlight {
+    transform: scale(0.9);
+  }
+
+  .focus-connector-spouse {
+    width: 10px;
+  }
+
+  .focus-connector {
+    height: 20px;
+  }
+
+  .focus-node-small {
+    transform: scale(0.78);
+  }
+}
+
 .tree-container.tree-focused {
   position: static;
   height: auto;
