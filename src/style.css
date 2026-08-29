@@ -259,7 +259,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 32px;
   position: relative;
   width: max-content;
@@ -269,7 +269,7 @@ body {
 }
 
 .spouse-connector {
-  width: 16px;
+  width: 8px;
   flex-shrink: 0;
   align-self: center;
 }
@@ -322,42 +322,42 @@ body {
 
 @media (max-width: 380px) {
   .tree-level {
-    gap: 10px;
-    padding: 24px 8px 0;
+    gap: 6px;
+    padding: 20px 6px 0;
   }
 
   .member-node {
-    width: 130px;
-    min-width: 130px;
-    padding: 8px;
+    width: 90px;
+    min-width: 90px;
+    padding: 5px;
   }
 
   .spouse-connector {
-    width: 10px;
+    width: 5px;
   }
 
   .avatar-wrapper {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 6px;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 3px;
   }
 
   .avatar-img {
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
   }
 
   .member-name {
-    font-size: 0.78rem;
+    font-size: 0.68rem;
   }
 
   .member-age-badge {
-    font-size: 0.68rem;
-    padding: 2px 6px;
+    font-size: 0.6rem;
+    padding: 1px 4px;
   }
 
   .member-role {
-    font-size: 0.65rem;
+    font-size: 0.58rem;
   }
 }
 
@@ -366,9 +366,9 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 12px;
-  width: 160px;
-  min-width: 160px;
+  padding: 8px;
+  width: 110px;
+  min-width: 110px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -377,6 +377,7 @@ body {
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
 }
 
 .member-node:hover {
@@ -388,14 +389,14 @@ body {
 
 .avatar-wrapper {
   position: relative;
-  width: 64px;
-  height: 64px;
-  margin-bottom: 8px;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
 }
 
 .avatar-img {
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
   border-radius: var(--radius-full);
   object-fit: cover;
   border: 2px solid var(--primary);
@@ -425,12 +426,13 @@ body {
   font-size: 0.88rem;
   font-weight: 600;
   color: var(--text-main);
-  line-height: 1.2;
+  line-height: 1.25;
   margin-bottom: 4px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 
 .member-age-badge {
@@ -446,6 +448,7 @@ body {
 .member-role {
   font-size: 0.7rem;
   color: var(--text-muted);
+  word-break: break-word;
 }
 
 .spouse-connector-badge {
