@@ -11,7 +11,7 @@ export default function Header({ onRefresh, isRefreshing }) {
           </svg>
         </div>
         <div>
-          <div className="brand-title">Trah Karyo Suwarno</div>
+          <div className="brand-title">My Family</div>
           <div className="brand-subtitle">Barang siapa ingin dilapangkan rezekinya dan dipanjangkan umurnya, hendaklah ia menyambung silaturahmi.</div>
         </div>
       </div>

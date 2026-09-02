@@ -81,6 +81,27 @@
   padding-bottom: 80px;
 }
 
+.demo-storage-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.12), rgba(234, 88, 12, 0.08));
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.demo-storage-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .fab-add {
   position: fixed;
   bottom: 84px;

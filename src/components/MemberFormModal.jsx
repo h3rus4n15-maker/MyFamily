@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { calculateAge } from '../utils/ageCalculator.js'
-import { db } from '../firebase'
-import { collection, addDoc, doc, updateDoc } from 'firebase/firestore'
+import { getAdapter, getActiveStorageMode, preparePhotoForStorage } from '../storage/storageAdapter.js'
 
 export default function MemberFormModal({ isOpen, member, allMembers, onSave, onClose }) {
   // State utama untuk data form anggota keluarga
@@ -103,33 +102,44 @@ export default function MemberFormModal({ isOpen, member, allMembers, onSave, on
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      name: formData.name,
-      dob: formData.dob,
-      gender: formData.gender,
-      status: formData.status,
-      deathDate: formData.status === 'deceased' ? formData.deathDate || null : null,
-      role: formData.role || '',
-      fatherId: formData.fatherId || null,
-      motherId: formData.motherId || null,
-      spouseId: formData.spouseId || null,
-      notes: formData.notes || '',
-      photoUrl: formData.photoUrl || '',
-      createdAt: new Date()
-    }
+    const storageMode = getActiveStorageMode();
+    const adapter = getAdapter(storageMode)
 
     try {
-      if (member?.id) {
-        await updateDoc(doc(db, 'members', member.id), payload)
-        alert('Berhasil! Data anggota diperbarui di Firestore.')
-      } else {
-        const docRef = await addDoc(collection(db, 'members'), payload)
-        alert('Berhasil! Data tersimpan di Firestore dengan ID: ' + docRef.id)
+      let photoUrl = formData.photoUrl || ''
+      const currentMode = getActiveStorageMode()
+      if (currentMode === 'pro' && photoUrl && photoUrl.startsWith('data:image')) {
+        photoUrl = await preparePhotoForStorage(photoUrl, formData.name || 'family-member')
       }
+
+      const payload = {
+        name: formData.name,
+        dob: formData.dob,
+        gender: formData.gender,
+        status: formData.status,
+        deathDate: formData.status === 'deceased' ? formData.deathDate || null : null,
+        role: formData.role || '',
+        fatherId: formData.fatherId || null,
+        motherId: formData.motherId || null,
+        spouseId: formData.spouseId || null,
+        notes: formData.notes || '',
+        photoUrl,
+        createdAt: member?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+
+      if (member?.id) {
+        await adapter.updateMember(member.id, payload)
+        alert('Berhasil! Data anggota diperbarui.')
+      } else {
+        await adapter.createMember(payload)
+        alert('Berhasil! Data tersimpan.')
+      }
+
       onSave(member ? member.id : null, payload)
       onClose()
     } catch (error) {
-      console.error('Gagal simpan ke Firebase:', error)
+      console.error('Gagal simpan data:', error)
       alert('Error: ' + error.message)
     }
   }

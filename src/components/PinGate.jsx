@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../firebase'
+import { ensureDemoMode, ensureProMode } from '../storage/storageAdapter.js'
 
 const FAMILY_PIN = 'trahkaryosuwarno' // ganti sesuai keinginan Anda
 const STORAGE_KEY = 'pohonkeluarga_verified'
@@ -15,6 +16,12 @@ export default function PinGate({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       const alreadyVerified = localStorage.getItem(STORAGE_KEY) === 'true'
+      if (user && !user.isAnonymous) {
+        ensureProMode()
+      } else {
+        ensureDemoMode()
+      }
+
       if (user && alreadyVerified) {
         setIsVerified(true)
       }
