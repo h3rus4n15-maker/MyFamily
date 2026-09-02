@@ -1,10 +1,10 @@
-# Pohon Keluarga App
+# My Family App
 
 Aplikasi web untuk mencatat, menampilkan, dan mengelola silsilah keluarga dalam bentuk pohon keluarga digital.
 
 ## Deskripsi
 
-Pohon Keluarga App adalah aplikasi berbasis web yang dirancang untuk membantu keluarga atau komunitas menyimpan data anggota keluarga, melihat hubungan antar anggota, dan menampilkan struktur keluarga secara visual. Aplikasi ini cocok digunakan untuk kebutuhan personal, keluarga besar, komunitas, organisasi, hingga kebutuhan digitalisasi data keluarga.
+My Family App adalah aplikasi berbasis web yang dirancang untuk membantu keluarga atau komunitas menyimpan data anggota keluarga, melihat hubungan antar anggota, dan menampilkan struktur keluarga secara visual. Aplikasi ini cocok digunakan untuk kebutuhan personal, keluarga besar, komunitas, organisasi, hingga kebutuhan digitalisasi data keluarga.
 
 ## Fitur utama
 
