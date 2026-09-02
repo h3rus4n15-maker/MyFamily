@@ -3,8 +3,8 @@ import { signInAnonymously, onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../firebase'
 import { ensureDemoMode, ensureProMode } from '../storage/storageAdapter.js'
 
-const FAMILY_PIN = 'trahkaryosuwarno' // ganti sesuai keinginan Anda
-const STORAGE_KEY = 'pohonkeluarga_verified'
+const FAMILY_PIN = 'myfamily' // ganti sesuai keinginan Anda
+const STORAGE_KEY = 'myfamily_verified'
 
 export default function PinGate({ children }) {
   const [isVerified, setIsVerified] = useState(false)
