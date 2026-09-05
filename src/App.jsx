@@ -17,6 +17,7 @@ import {
   getActiveStorageMode,
   getAdapter,
   importLocalFamilyData,
+  isProUser,
   migrateLocalToCloud,
 } from './storage/storageAdapter.js'
 import './App.css'
@@ -140,6 +141,11 @@ function App() {
 
   const handleUpgradePro = async () => {
     try {
+      if (!isProUser()) {
+        alert('Upgrade Pro memerlukan akun Pro. Fitur login Pro belum tersedia di aplikasi ini.')
+        return
+      }
+
       const shouldMigrate = window.confirm('Kami menemukan data lokal. Apakah Anda ingin mengunggahnya ke akun Pro Anda?')
       if (shouldMigrate) {
         const result = await migrateLocalToCloud()
